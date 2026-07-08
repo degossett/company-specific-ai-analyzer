@@ -20,6 +20,8 @@ PIPELINE_SCRIPTS = [
     "05.0_company_news.py",
     "06.0_leadership.py",
     "07.0_social_footprint.py",
+    "08.0_industry_context.py", # Make sure this matches your active script preferences
+    "09.0_hiring_signals.py", 
     "10.0_industry_ai.py",
     "11.0_generate_report.py" 
 ]
@@ -61,12 +63,15 @@ def glean_proper_company_name(url):
         return urlparse(url).netloc.replace('www.', '').split('.')[0].capitalize()
 
 def setup_target():
-    """Prompts for the URL, gleans the true corporate name, and saves config.json"""
+    """Checks for env variables (headless), otherwise prompts for URL and depth."""
     print("="*50)
     print("   AI COMPETITIVE INTELLIGENCE PIPELINE INIT")
     print("="*50)
     
-    start_url = input("Enter the target company's main URL (e.g., https://exeterfinance.com): ").strip()
+    # NEW: Check for Headless Environment Variables first
+    start_url = os.getenv("TARGET_URL")
+    if not start_url:
+        start_url = input("Enter the target company's main URL (e.g., https://exeterfinance.com): ").strip()
     
     if not start_url:
         print("Error: URL cannot be blank.")
@@ -77,13 +82,22 @@ def setup_target():
         
     domain_folder = urlparse(start_url).netloc.replace('www.', '')
     
+    # NEW: Check for Headless Depth Variable
+    depth_env = os.getenv("CRAWL_DEPTH")
+    if depth_env:
+        max_depth = int(depth_env)
+    else:
+        depth_input = input("Enter maximum crawl depth (Press Enter for default: 4): ").strip()
+        max_depth = int(depth_input) if depth_input.isdigit() else 4
+    
     # Glean the crisp proper name immediately 
     proper_name = glean_proper_company_name(start_url)
     
     config_data = {
         "target_url": start_url,
         "domain_folder": domain_folder,
-        "proper_company_name": proper_name
+        "proper_company_name": proper_name,
+        "max_depth": max_depth
     }
     
     with open("config.json", "w", encoding="utf-8") as f:
@@ -92,6 +106,7 @@ def setup_target():
     print(f"\n[+] Target Locked!")
     print(f"    Folder Name:  {domain_folder}")
     print(f"    Proper Name:  {proper_name}")
+    print(f"    Crawl Depth:  {max_depth}")
     print(f"    Saved to root config.json.\n")
     return domain_folder
 
