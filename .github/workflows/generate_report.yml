@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       target_url:
-        description: 'Target Company URL (e.g., https://exeterfinance.com)'
+        description: 'Target Company URL (e.g., google.com)'
         required: true
         type: string
       crawl_depth:
